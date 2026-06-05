@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Planificación y Calidad</title>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <style>
+        :root { 
+            --primary: #4f46e5; 
+            --epec: #3b82f6; --deas: #8b5cf6; --partners: #f59e0b; --otros: #64748b; --upn: #ef4444; 
+            --bg: #f8fafc; 
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 40px; }
+        h1 { text-align: center; color: #1e293b; margin-bottom: 30px; font-weight: 700; }
+        
+        .filter-container { text-align: center; margin-bottom: 30px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .filter-btn { padding: 8px 18px; border: none; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #fff; }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .add-btn { background: var(--primary); color: white; padding: 10px 25px; border: none; border-radius: 50px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
+
+        #calendar { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        .rubro-epec { background-color: var(--epec) !important; border: none !important; }
+        .rubro-deas { background-color: var(--deas) !important; border: none !important; }
+        .rubro-partners { background-color: var(--partners) !important; border: none !important; }
+        .rubro-otros { background-color: var(--otros) !important; border: none !important; }
+        .rubro-upn { background-color: var(--upn) !important; border: none !important; }
+
+        .modal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 350px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); z-index: 1000; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <h1>Planificación y Calidad</h1>
+    
+    <div style="text-align: center;">
+        <button class="add-btn" onclick="openModal()">+ Nuevo Evento</button>
+        <div class="filter-container">
+            <button class="filter-btn" style="background:#334155" onclick="filterEvents('all')">Todos</button>
+            <button class="filter-btn" style="background:var(--epec)" onclick="filterEvents('rubro-epec')">EPEC</button>
+            <button class="filter-btn" style="background:var(--deas)" onclick="filterEvents('rubro-deas')">DEAS</button>
+            <button class="filter-btn" style="background:var(--partners)" onclick="filterEvents('rubro-partners')">Partners</button>
+            <button class="filter-btn" style="background:var(--otros)" onclick="filterEvents('rubro-otros')">Otros</button>
+            <button class="filter-btn" style="background:var(--upn)" onclick="filterEvents('rubro-upn')">UPN</button>
+        </div>
+    </div>
+
+    <div id='calendar'></div>
+
+    <div id="eventModal" class="modal">
+        <h3 id="modalTitle">Nuevo Evento</h3>
+        <input type="text" id="editTitle" placeholder="Nombre del evento">
+        <input type="date" id="editDate">
+        <select id="editRubro">
+            <option value="rubro-epec">EPEC</option>
+            <option value="rubro-deas">DEAS</option>
+            <option value="rubro-partners">Flujo con Partners</option>
+            <option value="rubro-otros">Otros</option>
+            <option value="rubro-upn">UPN</option>
+        </select>
+        <textarea id="editNotes" placeholder="Notas adicionales"></textarea>
+        <button onclick="saveEvent()" style="background:var(--primary); color:white; border:none; width:100%; padding:12px; cursor:pointer; border-radius:10px; font-weight:600;">Guardar</button>
+        <button id="deleteBtn" onclick="deleteEvent()" style="background:#fee2e2; color:#b91c1c; border:none; width:100%; padding:12px; margin-top:10px; cursor:pointer; border-radius:10px; font-weight:600; display:none;">Eliminar</button>
+        <button onclick="closeModal()" style="background:#ddd; border:none; width:100%; padding:12px; margin-top:10px; cursor:pointer; border-radius:10px; font-weight:600;">Cancelar</button>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyphZyUFLZReDDbKfj3xgx_fTjEh4f8Z8jZTIltnSaoPP3UmAQivUXmoxNHgonHPKAmWw/exec';
+        let calendar, currentEvent;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listMonth' },
+                editable: true,
+                eventClick: function(info) {
+                    currentEvent = info.event;
+                    document.getElementById('modalTitle').innerText = "Editar Evento";
+                    document.getElementById('editTitle').value = currentEvent.title;
+                    document.getElementById('editDate').value = currentEvent.startStr;
+                    document.getElementById('editRubro').value = currentEvent.classNames[0];
+                    document.getElementById('editNotes').value = currentEvent.extendedProps.notes || '';
+                    document.getElementById('deleteBtn').style.display = 'block';
+                    document.getElementById('eventModal').style.display = 'block';
+                }
+            });
+            calendar.render();
+
+            fetch(SCRIPT_URL)
+                .then(res => res.json())
+                .then(data => data.forEach(e => calendar.addEvent(e)));
+        });
+
+        function openModal() {
+            currentEvent = null;
+            document.getElementById('modalTitle').innerText = "Nuevo Evento";
+            document.getElementById('editTitle').value = '';
+            document.getElementById('editNotes').value = '';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('eventModal').style.display = 'block';
+        }
+
+        function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
+
+        function saveEvent() {
+            const data = { 
+                title: document.getElementById('editTitle').value, 
+                start: document.getElementById('editDate').value, 
+                rubro: document.getElementById('editRubro').value,
+                notes: document.getElementById('editNotes').value
+            };
+            
+            fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors',
+                body: JSON.stringify(data) 
+            }).then(() => {
+                alert("Guardado. Recargando...");
+                location.reload();
+            });
+        }
+
+        function deleteEvent() { if (currentEvent) currentEvent.remove(); closeModal(); }
+
+        function filterEvents(rubro) {
+            calendar.getEvents().forEach(e => e.setProp('display', (rubro === 'all' || e.classNames.includes(rubro)) ? 'auto' : 'none'));
+        }
+    </script>
+</body>
+</html>
