@@ -66,7 +66,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyphZyUFLZReDDbKfj3xgx_fTjEh4f8Z8jZTIltnSaoPP3UmAQivUXmoxNHgonHPKAmWw/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvOlwAJr9oBxXo9p0V_ybBJ5qbLKeN7EiE_x14-NyDZLoxeVQPTdeGA2pk1k7i82yMjQ/exec';
         let calendar, currentEvent;
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -105,6 +105,7 @@
 
         function saveEvent() {
             const data = { 
+                id: currentEvent ? currentEvent.id : new Date().getTime().toString(),
                 title: document.getElementById('editTitle').value, 
                 start: document.getElementById('editDate').value, 
                 rubro: document.getElementById('editRubro').value,
@@ -121,7 +122,18 @@
             });
         }
 
-        function deleteEvent() { if (currentEvent) currentEvent.remove(); closeModal(); }
+        function deleteEvent() { 
+            if (currentEvent) {
+                fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors',
+                    body: JSON.stringify({ action: 'delete', id: currentEvent.id }) 
+                }).then(() => {
+                    currentEvent.remove();
+                    closeModal();
+                });
+            }
+        }
 
         function filterEvents(rubro) {
             calendar.getEvents().forEach(e => e.setProp('display', (rubro === 'all' || e.classNames.includes(rubro)) ? 'auto' : 'none'));
