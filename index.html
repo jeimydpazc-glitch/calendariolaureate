@@ -5,35 +5,24 @@
     <title>Planificación y Calidad</title>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <style>
-        :root { 
-            --primary: #4f46e5; 
-            --epec: #3b82f6; --deas: #8b5cf6; --partners: #f59e0b; --otros: #64748b; --upn: #ef4444; 
-            --bg: #f8fafc; 
-        }
+        :root { --primary: #4f46e5; --epec: #3b82f6; --deas: #8b5cf6; --partners: #f59e0b; --otros: #64748b; --upn: #ef4444; --bg: #f8fafc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); padding: 40px; }
         h1 { text-align: center; color: #1e293b; margin-bottom: 30px; font-weight: 700; }
-        
         .filter-container { text-align: center; margin-bottom: 30px; display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
         .filter-btn { padding: 8px 18px; border: none; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #fff; }
-        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .add-btn { background: var(--primary); color: white; padding: 10px 25px; border: none; border-radius: 50px; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
-
         #calendar { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        
         .rubro-epec { background-color: var(--epec) !important; border: none !important; }
         .rubro-deas { background-color: var(--deas) !important; border: none !important; }
         .rubro-partners { background-color: var(--partners) !important; border: none !important; }
         .rubro-otros { background-color: var(--otros) !important; border: none !important; }
         .rubro-upn { background-color: var(--upn) !important; border: none !important; }
-
         .modal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); width: 350px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); z-index: 1000; }
         input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
-
     <h1>Planificación y Calidad</h1>
-    
     <div style="text-align: center;">
         <button class="add-btn" onclick="openModal()">+ Nuevo Evento</button>
         <div class="filter-container">
@@ -45,7 +34,6 @@
             <button class="filter-btn" style="background:var(--upn)" onclick="filterEvents('rubro-upn')">UPN</button>
         </div>
     </div>
-
     <div id='calendar'></div>
 
     <div id="eventModal" class="modal">
@@ -86,21 +74,18 @@
                 }
             });
             calendar.render();
-
-            fetch(SCRIPT_URL)
-                .then(res => res.json())
-                .then(data => data.forEach(e => calendar.addEvent(e)));
+            fetch(SCRIPT_URL).then(res => res.json()).then(data => data.forEach(e => calendar.addEvent(e)));
         });
 
         function openModal() {
             currentEvent = null;
             document.getElementById('modalTitle').innerText = "Nuevo Evento";
             document.getElementById('editTitle').value = '';
+            document.getElementById('editDate').value = '';
             document.getElementById('editNotes').value = '';
             document.getElementById('deleteBtn').style.display = 'none';
             document.getElementById('eventModal').style.display = 'block';
         }
-
         function closeModal() { document.getElementById('eventModal').style.display = 'none'; }
 
         function saveEvent() {
@@ -111,27 +96,12 @@
                 rubro: document.getElementById('editRubro').value,
                 notes: document.getElementById('editNotes').value
             };
-            
-            fetch(SCRIPT_URL, { 
-                method: 'POST', 
-                mode: 'no-cors',
-                body: JSON.stringify(data) 
-            }).then(() => {
-                alert("Guardado. Recargando...");
-                location.reload();
-            });
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) }).then(() => { location.reload(); });
         }
 
         function deleteEvent() { 
             if (currentEvent) {
-                fetch(SCRIPT_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: 'delete', id: currentEvent.id }) 
-                }).then(() => {
-                    currentEvent.remove();
-                    closeModal();
-                });
+                fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'delete', id: currentEvent.id }) }).then(() => { location.reload(); });
             }
         }
 
